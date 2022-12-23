@@ -21,10 +21,10 @@ class AntColony:
             self.flow_matrix,
         ) = self.process_dataset_file("data/dataset.txt")
 
-    def process_dataset_file(self, file_name) -> tuple:
+    def process_dataset_file(self, file_name: str) -> tuple:
         """
-        Processes a .txt file that contains the number of locations, the
-        distance matrix, and the flow matrix.
+        Process a .txt file that contains the number of locations, the distance
+        matrix, and the flow matrix.
 
         Arguments:
             file_name: The name of the .txt file to get the data from.
@@ -34,26 +34,26 @@ class AntColony:
             containing the distance matrix and the flow matrix.
         """
         with open(file_name, "r") as file:
-            lines = file.readlines()
+            file_lines = file.readlines()
 
         # The first line of the file contains the number of locations, followed
         # by a blank line.
-        num_locations = int(lines[0])
-        # The next num_locations lines contain the distance matrix, followed by
-        # a blank line, then the flow matrix over num_locations lines.
+        num_locations = int(file_lines[0])
+        # The next num_locations lines contains the distance matrix, followed
+        # by a blank line, then the flow matrix over num_locations lines.
         distance_matrix_start = 2
-        flow_matrix_start = num_locations + 3
+        flow_matrix_start = distance_matrix_start + num_locations + 1
 
         # Generate the distance matrix and flow matrix.
         distance_matrix = np.empty((num_locations, num_locations), dtype=int)
         flow_matrix = np.empty((num_locations, num_locations), dtype=int)
-        for row in range(distance_matrix_start, distance_matrix_start + num_locations):
-            distance_matrix[row - distance_matrix_start] = np.fromstring(
-                lines[row], dtype=int, sep=" "
+        for row in range(num_locations):
+            distance_matrix[row] = np.fromstring(
+                file_lines[row + distance_matrix_start], dtype=int, sep=" "
             )
-        for row in range(flow_matrix_start, flow_matrix_start + num_locations):
-            flow_matrix[row - flow_matrix_start] = np.fromstring(
-                lines[row], dtype=int, sep=" "
+        for row in range(num_locations):
+            flow_matrix[row] = np.fromstring(
+                file_lines[row + flow_matrix_start], dtype=int, sep=" "
             )
 
         return (num_locations, distance_matrix, flow_matrix)
