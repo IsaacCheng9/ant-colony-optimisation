@@ -43,7 +43,7 @@ class AntColony:
 
 
 if __name__ == "__main__":
-    ant_colony = AntColony(5, 100, 0.90)
+    ant_colony = AntColony(num_trials=5, num_ant_paths=100, evaporation_rate=0.90)
     print(ant_colony.num_locations)
     print(ant_colony.distance_matrix)
     print(ant_colony.flow_matrix)
