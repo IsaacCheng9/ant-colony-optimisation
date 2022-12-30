@@ -23,11 +23,11 @@ class AntColony:
 
     def load_data_file(self, file_name: str) -> tuple:
         """
-        Process a .txt file that contains the number of locations, the distance
+        Load a data file that contains the number of locations, the distance
         matrix, and the flow matrix.
 
         Arguments:
-            file_name: The name of the .txt file to get the data from.
+            file_name: The name of the file to get the data from.
 
         Returns:
             A tuple of the number of locations, and two 2D numpy arrays
