@@ -19,7 +19,7 @@ class AntColony:
             self.num_locations,
             self.distance_matrix,
             self.flow_matrix,
-        ) = self.process_dataset_file("data/dataset.txt")
+        ) = self.process_dataset_file("data/Uni50a.dat")
 
     def process_dataset_file(self, file_name: str) -> tuple:
         """
@@ -59,12 +59,8 @@ class AntColony:
         return (num_locations, distance_matrix, flow_matrix)
 
 
-def main():
+if __name__ == "__main__":
     ant_colony = AntColony(5, 100, 0.90)
     print(ant_colony.num_locations)
     print(ant_colony.distance_matrix)
     print(ant_colony.flow_matrix)
-
-
-if __name__ == "__main__":
-    main()
