@@ -19,9 +19,9 @@ class AntColony:
             self.num_locations,
             self.distance_matrix,
             self.flow_matrix,
-        ) = self.process_dataset_file("data/Uni50a.dat")
+        ) = self.load_data_file("data/Uni50a.dat")
 
-    def process_dataset_file(self, file_name: str) -> tuple:
+    def load_data_file(self, file_name: str) -> tuple:
         """
         Process a .txt file that contains the number of locations, the distance
         matrix, and the flow matrix.
@@ -33,28 +33,11 @@ class AntColony:
             A tuple of the number of locations, and two 2D numpy arrays
             containing the distance matrix and the flow matrix.
         """
-        with open(file_name, "r") as file:
-            file_lines = file.readlines()
-
-        # The first line of the file contains the number of locations, followed
-        # by a blank line.
-        num_locations = int(file_lines[0])
-        # The next num_locations lines contains the distance matrix, followed
-        # by a blank line, then the flow matrix over num_locations lines.
-        distance_matrix_start = 2
-        flow_matrix_start = distance_matrix_start + num_locations + 1
-
-        # Generate the distance matrix and flow matrix.
-        distance_matrix = np.empty((num_locations, num_locations), dtype=int)
-        flow_matrix = np.empty((num_locations, num_locations), dtype=int)
-        for row in range(num_locations):
-            distance_matrix[row] = np.fromstring(
-                file_lines[row + distance_matrix_start], dtype=int, sep=" "
-            )
-        for row in range(num_locations):
-            flow_matrix[row] = np.fromstring(
-                file_lines[row + flow_matrix_start], dtype=int, sep=" "
-            )
+        first_line = np.loadtxt(file_name, ndmin=2, usecols=(0))
+        num_locations = int(first_line[0, 0])
+        matrix_data = np.loadtxt(file_name, skiprows=1, unpack=True, ndmin=2)
+        distance_matrix = matrix_data[0:, 0:num_locations]
+        flow_matrix = matrix_data[0:, num_locations:]
 
         return (num_locations, distance_matrix, flow_matrix)
 
