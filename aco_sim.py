@@ -52,7 +52,7 @@ class AntColonySimulation:
 
         return (num_locations, distance_matrix, flow_matrix)
 
-    def generate_ant_paths(self, num_ant_paths: int) -> List[int]:
+    def generate_ant_paths(self, num_ant_paths: int) -> List[List[int]]:
         """
         Simulate each ant randomly selecting a path between the locations.
 
@@ -60,7 +60,7 @@ class AntColonySimulation:
             num_ant_paths: The number of ant paths to generate.
 
         Returns:
-            A list of ant paths.
+            A list of ant paths that contain numerical locations.
         """
         paths = []
 
@@ -76,7 +76,7 @@ class AntColonySimulation:
         Calculate the fitness of a path.
 
         Args:
-            The path to calculate the fitness of.
+            path: The path to calculate the fitness of.
 
         Returns:
             The fitness of the path.
@@ -84,10 +84,16 @@ class AntColonySimulation:
         fitness = 0
         path.append(path[0])
         for i in range(len(path) - 1):
+            # for j in range(len(path) - 1):
+            # fitness += (
+            #     self.distance_matrix[path[i], path[j]]
+            #     * self.flow_matrix[path[i], path[j]]
+            # )
             fitness += (
                 self.distance_matrix[path[i], path[i + 1]]
                 * self.flow_matrix[path[i], path[i + 1]]
             )
+
         return fitness
 
     def update_pheromone(self, pheromone: np.ndarray, paths: list) -> np.ndarray:
@@ -179,39 +185,22 @@ class AntColonySimulation:
 
 if __name__ == "__main__":
     start = time.perf_counter()
+    NUM_TRIALS = 5
     NUM_EVALUATIONS_PER_TRIAL = 10000
+    # (num_ant_paths, evaporation_rate)
+    configs = [
+        (100, 0.90),
+        (100, 0.50),
+        (10, 0.90),
+        (10, 0.50),
+    ]
 
-    ant_colony1 = AntColonySimulation(
-        num_trials=5, num_ant_paths=100, evaporation_rate=0.90
-    )
-    print(ant_colony1.num_locations)
-    print(ant_colony1.distance_matrix)
-    print(ant_colony1.flow_matrix)
-    print(f"Experiment 1: {ant_colony1.run_trials(NUM_EVALUATIONS_PER_TRIAL)}")
-
-    ant_colony2 = AntColonySimulation(
-        num_trials=5, num_ant_paths=100, evaporation_rate=0.50
-    )
-    print(ant_colony2.num_locations)
-    print(ant_colony2.distance_matrix)
-    print(ant_colony2.flow_matrix)
-    print(f"Experiment 2: {ant_colony2.run_trials(NUM_EVALUATIONS_PER_TRIAL)}")
-
-    ant_colony3 = AntColonySimulation(
-        num_trials=5, num_ant_paths=10, evaporation_rate=0.90
-    )
-    print(ant_colony3.num_locations)
-    print(ant_colony3.distance_matrix)
-    print(ant_colony3.flow_matrix)
-    print(f"Experiment 3: {ant_colony3.run_trials(NUM_EVALUATIONS_PER_TRIAL)}")
-
-    ant_colony4 = AntColonySimulation(
-        num_trials=5, num_ant_paths=10, evaporation_rate=0.50
-    )
-    print(ant_colony4.num_locations)
-    print(ant_colony4.distance_matrix)
-    print(ant_colony4.flow_matrix)
-    print(f"Experiment 4: {ant_colony4.run_trials(NUM_EVALUATIONS_PER_TRIAL)}")
+    for index, config in enumerate(configs):
+        m, e = config
+        print(f"Running experiment with m = {m}, e = {e}...")
+        aco_sim = AntColonySimulation(NUM_TRIALS, num_ant_paths=m, evaporation_rate=e)
+        fitness_results = aco_sim.run_trials(NUM_EVALUATIONS_PER_TRIAL)
+        print(f"Experiment {index + 1} (m = {m}, e = {e}):" f"{fitness_results}\n")
 
     end = time.perf_counter()
-    print(f"Time taken: {end - start} seconds")
+    print(f"\nTime taken: {end - start} seconds")
