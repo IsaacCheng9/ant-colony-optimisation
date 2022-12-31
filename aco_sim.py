@@ -16,21 +16,21 @@ class AntColonySimulation:
     def __init__(
         self,
         num_trials: int,
+        num_locations: int,
+        distance_matrix: np.ndarray,
+        flow_matrix: np.ndarray,
         num_ant_paths: int,
         evaporation_rate: float,
     ):
         self.num_trials = num_trials
-        self.num_ant_paths = num_ant_paths
-        self.evaporation_rate = evaporation_rate
-
+        self.num_locations = num_locations
         # Each element of the distance matrix represents the distance between
         # two locations, and each element of the flow matrix represents the
         # number of students that flow between two locations.
-        (
-            self.num_locations,
-            self.distance_matrix,
-            self.flow_matrix,
-        ) = load_data_file("data/Uni50a.dat")
+        self.distance_matrix = distance_matrix
+        self.flow_matrix = flow_matrix
+        self.num_ant_paths = num_ant_paths
+        self.evaporation_rate = evaporation_rate
 
     def generate_ant_paths(self, num_ant_paths: int) -> List[List[int]]:
         """
@@ -189,6 +189,7 @@ def load_data_file(file_name: str) -> Tuple[int, np.ndarray, np.ndarray]:
 
 if __name__ == "__main__":
     start = time.perf_counter()
+    locations, distances, flows = load_data_file("data/Uni50a.dat")
     NUM_TRIALS = 5
     NUM_EVALUATIONS_PER_TRIAL = 10000
     # (num_ant_paths, evaporation_rate)
@@ -202,7 +203,14 @@ if __name__ == "__main__":
     for index, config in enumerate(configs):
         m, e = config
         print(f"Running experiment with m = {m}, e = {e}...")
-        aco_sim = AntColonySimulation(NUM_TRIALS, num_ant_paths=m, evaporation_rate=e)
+        aco_sim = AntColonySimulation(
+            num_trials=NUM_TRIALS,
+            num_locations=locations,
+            distance_matrix=distances,
+            flow_matrix=flows,
+            num_ant_paths=m,
+            evaporation_rate=e,
+        )
         fitness_results = aco_sim.run_trials(NUM_EVALUATIONS_PER_TRIAL)
         print(f"Experiment {index + 1} (m = {m}, e = {e}):" f"{fitness_results}\n")
 
