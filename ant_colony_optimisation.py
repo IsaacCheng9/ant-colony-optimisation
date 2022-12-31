@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 
 class AntColony:
@@ -21,6 +22,12 @@ class AntColony:
             self.flow_matrix,
         ) = self.load_data_file("data/Uni50a.dat")
 
+        # Randomly distribute small amounts of pheromone between 0 and 1 on the
+        # construction graph.
+        self.pheromone = np.random.uniform(
+            0, 1, (self.num_locations, self.num_locations)
+        )
+
     def load_data_file(self, file_name: str) -> tuple:
         """
         Load a data file that contains the number of locations, the distance
@@ -41,9 +48,18 @@ class AntColony:
 
         return (num_locations, distance_matrix, flow_matrix)
 
+    def evaporate_pheromone(self):
+        """
+        Evaporate the pheromone values.
+        """
+        for row in range(self.num_locations):
+            for col in range(self.num_locations):
+                self.pheromone[row][col] *= self.evaporation_rate
+
 
 if __name__ == "__main__":
     ant_colony = AntColony(num_trials=5, num_ant_paths=100, evaporation_rate=0.90)
     print(ant_colony.num_locations)
     print(ant_colony.distance_matrix)
     print(ant_colony.flow_matrix)
+    print(ant_colony.pheromone)
