@@ -50,7 +50,7 @@ class AntColony:
 
     def evaporate_pheromone(self):
         """
-        Evaporate the pheromone values.
+        Evaporate the pheromone values according to the evaporation rate.
         """
         for row in range(self.num_locations):
             for col in range(self.num_locations):
