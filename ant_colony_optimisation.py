@@ -1,11 +1,18 @@
-import math
+"""
+Ant colony optimisation to solve the quadratic assignment problem.
+"""
 import random
 import time
+from typing import List, Tuple
 
 import numpy as np
 
 
-class AntColony:
+class AntColonySimulation:
+    """
+    Simulation of an ant colony.
+    """
+
     def __init__(
         self,
         num_trials: int,
@@ -25,7 +32,7 @@ class AntColony:
             self.flow_matrix,
         ) = self.load_data_file("data/Uni50a.dat")
 
-    def load_data_file(self, file_name: str) -> tuple:
+    def load_data_file(self, file_name: str) -> Tuple[int, np.ndarray, np.ndarray]:
         """
         Load a data file that contains the number of locations, the distance
         matrix, and the flow matrix.
@@ -45,7 +52,7 @@ class AntColony:
 
         return (num_locations, distance_matrix, flow_matrix)
 
-    def generate_ant_paths(self, num_ant_paths: int) -> list:
+    def generate_ant_paths(self, num_ant_paths: int) -> List[int]:
         """
         Simulate each ant randomly selecting a path between the locations.
 
@@ -84,6 +91,16 @@ class AntColony:
         return fitness
 
     def update_pheromone(self, pheromone: np.ndarray, paths: list) -> np.ndarray:
+        """
+        Update the pheromone values for the paths.
+
+        Args:
+            pheromone: The pheromone matrix for the paths.
+            paths: The paths to update the pheromone values for.
+
+        Returns:
+            The pheromone matrix after updating the pheromone values.
+        """
         for path in paths:
             fitness = self.calculate_fitness(path)
             for i in range(len(path)):
@@ -116,7 +133,7 @@ class AntColony:
         paths = self.generate_ant_paths(self.num_ant_paths)
         self.update_pheromone(pheromone, paths)
         self.evaporate_pheromone(pheromone)
-        best_fitness = math.inf
+        best_fitness = float("inf")
         for path in paths:
             fitness = self.calculate_fitness(path)
             best_fitness = min(best_fitness, fitness)
@@ -135,13 +152,13 @@ class AntColony:
         Returns:
             The best fitness found after finishing all evaluations.
         """
-        best_fitness = math.inf
+        best_fitness = float("inf")
         for _ in range(num_evaluations):
             best_fitness = min(best_fitness, self.run_aco_evaluation())
 
         return best_fitness
 
-    def run_trials(self, num_evaluations_per_trial: int) -> list:
+    def run_trials(self, num_evaluations_per_trial: int) -> List[float]:
         """
         Run the ant colony optimisation algorithm for a number of trials.
 
@@ -162,31 +179,39 @@ class AntColony:
 
 if __name__ == "__main__":
     start = time.perf_counter()
-    num_evaluations_per_trial = 10000
+    NUM_EVALUATIONS_PER_TRIAL = 10000
 
-    ant_colony1 = AntColony(num_trials=5, num_ant_paths=100, evaporation_rate=0.90)
+    ant_colony1 = AntColonySimulation(
+        num_trials=5, num_ant_paths=100, evaporation_rate=0.90
+    )
     print(ant_colony1.num_locations)
     print(ant_colony1.distance_matrix)
     print(ant_colony1.flow_matrix)
-    print(f"Experiment 1: {ant_colony1.run_trials(num_evaluations_per_trial)}")
+    print(f"Experiment 1: {ant_colony1.run_trials(NUM_EVALUATIONS_PER_TRIAL)}")
 
-    ant_colony2 = AntColony(num_trials=5, num_ant_paths=100, evaporation_rate=0.50)
+    ant_colony2 = AntColonySimulation(
+        num_trials=5, num_ant_paths=100, evaporation_rate=0.50
+    )
     print(ant_colony2.num_locations)
     print(ant_colony2.distance_matrix)
     print(ant_colony2.flow_matrix)
-    print(f"Experiment 2: {ant_colony2.run_trials(num_evaluations_per_trial)}")
+    print(f"Experiment 2: {ant_colony2.run_trials(NUM_EVALUATIONS_PER_TRIAL)}")
 
-    ant_colony3 = AntColony(num_trials=5, num_ant_paths=10, evaporation_rate=0.90)
+    ant_colony3 = AntColonySimulation(
+        num_trials=5, num_ant_paths=10, evaporation_rate=0.90
+    )
     print(ant_colony3.num_locations)
     print(ant_colony3.distance_matrix)
     print(ant_colony3.flow_matrix)
-    print(f"Experiment 3: {ant_colony3.run_trials(num_evaluations_per_trial)}")
+    print(f"Experiment 3: {ant_colony3.run_trials(NUM_EVALUATIONS_PER_TRIAL)}")
 
-    ant_colony4 = AntColony(num_trials=5, num_ant_paths=10, evaporation_rate=0.50)
+    ant_colony4 = AntColonySimulation(
+        num_trials=5, num_ant_paths=10, evaporation_rate=0.50
+    )
     print(ant_colony4.num_locations)
     print(ant_colony4.distance_matrix)
     print(ant_colony4.flow_matrix)
-    print(f"Experiment 4: {ant_colony4.run_trials(num_evaluations_per_trial)}")
+    print(f"Experiment 4: {ant_colony4.run_trials(NUM_EVALUATIONS_PER_TRIAL)}")
 
     end = time.perf_counter()
     print(f"Time taken: {end - start} seconds")
