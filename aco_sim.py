@@ -34,116 +34,121 @@ class AntColonySimulation:
         self.num_ant_paths = num_ant_paths
         self.evaporation_rate = evaporation_rate
 
-    def generate_ant_paths(self, num_ant_paths: int) -> List[List[int]]:
-        """
-        Simulate each ant randomly selecting a path between the locations.
+    def choose_next_facility(self, ant_path, row):
+        total_pheromone_in_next_paths = 0
+        for i in range(self.num_locations):
+            if i in ant_path:
+                continue
+            total_pheromone_in_next_paths += self.pheromone_matrix[row][i]
 
-        Args:
-            num_ant_paths: The number of ant paths to generate.
+        probabilities = np.empty(self.num_locations, dtype="float64")
+        for i in range(self.num_locations):
+            # If the facility has already been assigned a location, ensure that
+            # it can't be selected in the future.
+            if i in ant_path:
+                probabilities[i] = 0
+            # Calculate the probability of selecting this facility based on
+            # pheromone levels.
+            else:
+                next_facility_pheromone = self.pheromone_matrix[row][i]
+                probabilities[i] = (
+                    next_facility_pheromone / total_pheromone_in_next_paths
+                )
 
-        Returns:
-            A list of ant paths that contain numerical locations.
-        """
-        # TODO: Implement this with numpy.
-        paths = []
+        # Choose the next facility based on the weighted probability.
+        probabilities /= np.sum(probabilities)
+        next_facility = np.random.choice(
+            list(range(self.num_locations)), p=probabilities
+        )
 
-        # TODO: Generate paths based on probabilities that can be calculated from the pheromone matrix.
-        for _ in range(num_ant_paths):
-            path = list(range(self.num_locations))
-            random.shuffle(path)
-            paths.append(path)
+        return next_facility
 
-        return paths
+    def generate_ant_path(self):
+        ant_path = np.array([self.num_locations + 1] * self.num_locations)
 
-    def calculate_fitness(self, path: list) -> float:
+        for i in range(self.num_locations):
+            ant_path[i] = self.choose_next_facility(ant_path, i)
+
+        ant_fitness = self.calculate_fitness(ant_path)
+        return ant_path, ant_fitness
+
+    def calculate_fitness(self, ant_path) -> float:
         """
         Calculate the fitness of a path.
 
         Args:
-            path: The path to calculate the fitness of.
+            ant_path: The path to calculate the fitness of.
 
         Returns:
             The fitness of the path.
         """
         fitness = 0
-        path.append(path[0])
-        for i in range(len(path) - 1):
-            for j in range(len(path) - 1):
+
+        for i in range(self.num_locations):
+            for j in range(self.num_locations):
                 fitness += (
-                    self.distance_matrix[path[i], path[j]]
-                    * self.flow_matrix[path[i], path[j]]
+                    self.distance_matrix[ant_path[i]][ant_path[j]]
+                    * self.flow_matrix[i][j]
                 )
-            # fitness += (
-            #     self.distance_matrix[path[i], path[i + 1]]
-            #     * self.flow_matrix[path[i], path[i + 1]]
-            # )
 
         return fitness
 
-    def update_pheromone(self, pheromone: np.ndarray, paths: list) -> np.ndarray:
+    def update_pheromone_matrix(self, ant_paths, ant_fitnesses):
         """
         Update the pheromone values for the paths.
 
         Args:
-            pheromone: The pheromone matrix for the paths.
-            paths: The paths to update the pheromone values for.
-
-        Returns:
-            The pheromone matrix after updating the pheromone values.
+            ant_paths: The paths to update the pheromone values for.
+            ant_fitnesses: The fitnesses of the paths that we use to update the
+                       pheromone values.
         """
-        for path in paths:
-            fitness = self.calculate_fitness(path)
-            for i in range(len(path)):
-                pheromone[path[i], path[(i + 1) % len(path)]] += 1 / fitness
-        return pheromone
+        for i in range(self.num_ant_paths):
+            for j in range(self.num_locations):
+                self.pheromone_matrix[j][ant_paths[i][j]] += 1 / ant_fitnesses[i]
 
-    def evaporate_pheromone(self, pheromone: np.ndarray) -> np.ndarray:
+    def evaporate_pheromone(self) -> None:
         """
         Evaporate the pheromone values according to the evaporation rate.
-
-        Args:
-            pheromone: The pheromone matrix for the paths.
-
-        Returns:
-            The updated pheromone matrix after evaporation has occurred.
         """
-        pheromone *= self.evaporation_rate
-        return pheromone
+        self.pheromone_matrix *= self.evaporation_rate
 
-    def run_aco_evaluation(self) -> float:
-        """
-        Run an ant colony optimisation evaluation iteration.
-
-        Returns:
-            The best fitness found after finishing the evaluation iteration.
-        """
-        # Randomly distribute small amounts of pheromone between 0 and 1 on the
-        # construction graph.
-        pheromone = np.random.uniform(0, 1, (self.num_locations, self.num_locations))
-        paths = self.generate_ant_paths(self.num_ant_paths)
-        self.update_pheromone(pheromone, paths)
-        self.evaporate_pheromone(pheromone)
-        best_fitness = float("inf")
-        for path in paths:
-            fitness = self.calculate_fitness(path)
-            best_fitness = min(best_fitness, fitness)
-        return best_fitness
-
-    def run_fitness_evaluations(self) -> float:
+    def run_trial(self) -> tuple:
         """
         Run the ant colony optimisation algorithm for a number of fitness
         evaluations.
 
         Returns:
-            The best fitness found after finishing all evaluations.
+            The best fitness and the best ant path found after finishing all
+            evaluations.
         """
         best_fitness = float("inf")
+        best_ant_path = float()
+
         for i in range(self.num_evaluations_per_trial):
             print(f"Iteration {i} - Current best fitness: {best_fitness}")
-            best_fitness = min(best_fitness, self.run_aco_evaluation())
-        return best_fitness
+            # Randomly distribute small amounts of pheromone between 0 and 1 on
+            # the construction graph.
+            self.pheromone_matrix = np.random.uniform(
+                0, 1, (self.num_locations, self.num_locations)
+            )
+            ant_paths = np.empty((self.num_ant_paths, self.num_locations), dtype=int)
+            ant_fitnesses = np.empty(self.num_ant_paths, dtype=float)
 
-    def run_trials(self) -> List[float]:
+            for j in range(self.num_ant_paths):
+                ant_path, ant_fitness = self.generate_ant_path()
+                ant_paths[j] = ant_path
+                ant_fitnesses[j] = ant_fitness
+
+                if ant_fitness < best_fitness:
+                    best_fitness = ant_fitness
+                    best_ant_path = ant_path
+
+            self.update_pheromone_matrix(ant_paths, ant_fitnesses)
+            self.evaporate_pheromone()
+
+        return best_fitness, best_ant_path
+
+    def run_experiment(self) -> tuple:
         """
         Run the ant colony optimisation algorithm for a number of trials.
 
@@ -155,13 +160,18 @@ class AntColonySimulation:
             f"m = {self.num_ant_paths}, e = {self.evaporation_rate}..."
         )
         best_fitnesses = []
+        best_ant_paths = []
         for _ in range(self.num_trials):
-            best_fitnesses.append(self.run_fitness_evaluations())
+            best_fitness, best_ant_path = self.run_trial()
+            best_fitnesses.append(best_fitness)
+            best_ant_paths.append(best_ant_path)
         print(
             f"Experiment {index + 1} (m = {self.num_ant_paths}, "
-            f"e = {self.evaporation_rate}): {best_fitnesses}\n"
+            f"e = {self.evaporation_rate}):"
         )
-        return best_fitnesses
+        print(f"Best Fitnesses: {best_fitnesses}")
+        print(f"Best Ant Paths: {best_ant_paths}")
+        return best_fitnesses, best_ant_paths
 
 
 def load_data_file(file_name: str) -> Tuple[int, np.ndarray, np.ndarray]:
@@ -210,7 +220,7 @@ if __name__ == "__main__":
             num_ant_paths=m,
             evaporation_rate=e,
         )
-        results.append(aco_sim.run_trials())
+        results.append(aco_sim.run_experiment())
 
     end = time.perf_counter()
     print(f"\nTime taken: {end - start} seconds\n")
