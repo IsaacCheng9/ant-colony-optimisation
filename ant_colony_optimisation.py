@@ -48,6 +48,25 @@ class AntColony:
 
         return (num_locations, distance_matrix, flow_matrix)
 
+    def generate_ant_paths(self, num_ant_paths: int) -> list:
+        """
+        Simulate each ant randomly selecting a path between the locations.
+
+        Args:
+            num_ant_paths: The number of ant paths to generate.
+
+        Returns:
+            A list of ant paths.
+        """
+        paths = []
+
+        for _ in range(num_ant_paths):
+            path = list(range(self.num_locations))
+            random.shuffle(path)
+            paths.append(path)
+
+        return paths
+
     def evaporate_pheromone(self):
         """
         Evaporate the pheromone values according to the evaporation rate.
