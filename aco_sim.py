@@ -1,7 +1,6 @@
 """
 Ant colony optimisation to solve the quadratic assignment problem.
 """
-import random
 import time
 from typing import List, Tuple
 
@@ -34,7 +33,7 @@ class AntColonySimulation:
         self.num_ant_paths = num_ant_paths
         self.evaporation_rate = evaporation_rate
 
-    def choose_next_facility(self, ant_path, row):
+    def choose_next_facility(self, ant_path: np.ndarray, row: int):
         total_pheromone_in_next_paths = 0
         for i in range(self.num_locations):
             if i in ant_path:
@@ -63,16 +62,14 @@ class AntColonySimulation:
 
         return next_facility
 
-    def generate_ant_path(self):
+    def generate_ant_path(self) -> Tuple[np.ndarray, float]:
         ant_path = np.array([self.num_locations + 1] * self.num_locations)
-
         for i in range(self.num_locations):
             ant_path[i] = self.choose_next_facility(ant_path, i)
-
         ant_fitness = self.calculate_fitness(ant_path)
         return ant_path, ant_fitness
 
-    def calculate_fitness(self, ant_path) -> float:
+    def calculate_fitness(self, ant_path: np.ndarray) -> float:
         """
         Calculate the fitness of a path.
 
@@ -82,18 +79,16 @@ class AntColonySimulation:
         Returns:
             The fitness of the path.
         """
-        fitness = 0
-
+        fitness = 0.0
         for i in range(self.num_locations):
             for j in range(self.num_locations):
                 fitness += (
                     self.distance_matrix[ant_path[i]][ant_path[j]]
                     * self.flow_matrix[i][j]
                 )
-
         return fitness
 
-    def update_pheromone_matrix(self, ant_paths, ant_fitnesses):
+    def update_pheromone_matrix(self, ant_paths: np.ndarray, ant_fitnesses: np.ndarray):
         """
         Update the pheromone values for the paths.
 
@@ -112,7 +107,7 @@ class AntColonySimulation:
         """
         self.pheromone_matrix *= self.evaporation_rate
 
-    def run_trial(self) -> tuple:
+    def run_trial(self) -> Tuple[float, np.ndarray]:
         """
         Run the ant colony optimisation algorithm for a number of fitness
         evaluations.
@@ -122,7 +117,7 @@ class AntColonySimulation:
             evaluations.
         """
         best_fitness = float("inf")
-        best_ant_path = float()
+        best_ant_path = np.array([self.num_locations + 1] * self.num_locations)
 
         for i in range(self.num_evaluations_per_trial):
             print(f"Iteration {i} - Current best fitness: {best_fitness}")
@@ -161,6 +156,7 @@ class AntColonySimulation:
         )
         best_fitnesses = []
         best_ant_paths = []
+
         for _ in range(self.num_trials):
             best_fitness, best_ant_path = self.run_trial()
             best_fitnesses.append(best_fitness)
@@ -171,6 +167,7 @@ class AntColonySimulation:
         )
         print(f"Best Fitnesses: {best_fitnesses}")
         print(f"Best Ant Paths: {best_ant_paths}")
+
         return best_fitnesses, best_ant_paths
 
 
