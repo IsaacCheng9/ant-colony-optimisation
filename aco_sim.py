@@ -56,6 +56,7 @@ class AntColonyQAPSimulation:
                 continue
             total_pheromone_in_next_paths += self.pheromone_matrix[row][i]
 
+        # Assign probabilities for each location based on the pheromone levels.
         probabilities = np.empty(self.num_locations, dtype="float64")
         for i in range(self.num_locations):
             # If the facility has already been assigned a location, ensure that
@@ -143,7 +144,6 @@ class AntColonyQAPSimulation:
         best_ant_path = np.array([self.num_locations + 1] * self.num_locations)
 
         for i in range(self.num_evaluations_per_trial):
-            print(f"Iteration {i} - Current best fitness: {best_fitness}")
             ant_paths = np.empty((self.num_ant_paths, self.num_locations), dtype=int)
             ant_fitnesses = np.empty(self.num_ant_paths, dtype=float)
 
@@ -151,15 +151,14 @@ class AntColonyQAPSimulation:
             # fitness.
             for j in range(self.num_ant_paths):
                 ant_path, ant_fitness = self.generate_ant_path()
-                ant_paths[j] = ant_path
-                ant_fitnesses[j] = ant_fitness
-
+                ant_paths[j], ant_fitnesses[j] = ant_path, ant_fitness
                 if ant_fitness < best_fitness:
                     best_fitness = ant_fitness
                     best_ant_path = ant_path
 
             self.update_pheromone_matrix(ant_paths, ant_fitnesses)
             self.evaporate_pheromone()
+            print(f"Iteration {i} - current best fitness: {best_fitness}")
 
         return best_fitness, best_ant_path
 
