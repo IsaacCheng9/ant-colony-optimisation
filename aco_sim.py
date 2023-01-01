@@ -38,13 +38,16 @@ class AntColonyQAPSimulation:
             0, 1, (self.num_locations, self.num_locations)
         )
 
-    def choose_next_facility(self, ant_path: np.ndarray, row: int) -> int:
+    def choose_next_facility(
+        self, ant_path_set: set, row: int
+    ) -> int:
         """
         Choose the next facility to assign to a location based on the pheromone
         levels.
 
         Args:
-            ant_path: The path that the ant has already taken.
+            ant_path_set: A set of facilities that the location has already
+                          been assigned, used for fast look-ups.
             row: The row of the pheromone matrix to use.
 
         Returns:
@@ -52,7 +55,7 @@ class AntColonyQAPSimulation:
         """
         total_pheromone_in_next_paths = 0
         for i in range(self.num_locations):
-            if i in ant_path:
+            if i in ant_path_set:
                 continue
             total_pheromone_in_next_paths += self.pheromone_matrix[row][i]
 
@@ -61,7 +64,7 @@ class AntColonyQAPSimulation:
         for i in range(self.num_locations):
             # If the facility has already been assigned a location, ensure that
             # it can't be selected in the future.
-            if i in ant_path:
+            if i in ant_path_set:
                 probabilities[i] = 0
             # Calculate the probability of selecting this facility based on
             # pheromone levels.
@@ -88,9 +91,16 @@ class AntColonyQAPSimulation:
             The path that the ant took and the fitness of the path.
         """
         ant_path = np.array([self.num_locations + 1] * self.num_locations)
+        ant_path_set = set()
+
         for i in range(self.num_locations):
-            ant_path[i] = self.choose_next_facility(ant_path, i)
+            facility_index = self.choose_next_facility(ant_path_set, i)
+            ant_path[i] = facility_index
+            # Keep a separate set for the facilities that have been assigned
+            # for O(1) rather than O(n) lookups.
+            ant_path_set.add(facility_index)
         ant_fitness = self.calculate_fitness(ant_path)
+
         return ant_path, ant_fitness
 
     def calculate_fitness(self, ant_path: np.ndarray) -> float:
