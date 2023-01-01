@@ -253,9 +253,8 @@ if __name__ == "__main__":
     # Set up the experiment configurations.
     start = time.perf_counter()
     locations, distances, flows = load_data_file("data/Uni50a.dat")
-    NUM_TRIALS = 2
+    NUM_TRIALS = 5
     NUM_EVALUATIONS_PER_TRIAL = 10_000
-    NUM_EVALUATIONS_PER_TRIAL = 2
     # (num_ant_paths, evaporation_rate)
     experiments = [
         (100, 0.90),
