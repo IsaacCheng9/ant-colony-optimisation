@@ -112,7 +112,9 @@ class AntColonyQAPSimulation:
                 )
         return fitness
 
-    def update_pheromone_matrix(self, ant_paths: np.ndarray, ant_fitnesses: np.ndarray):
+    def update_pheromone_matrix(
+        self, ant_paths: np.ndarray, ant_fitnesses: np.ndarray
+    ) -> None:
         """
         Update the pheromone matrix values for the paths.
 
