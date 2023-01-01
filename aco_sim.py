@@ -151,17 +151,15 @@ class AntColonyQAPSimulation:
         """
         self.pheromone_matrix *= self.evaporation_rate
 
-    def run_trial(self) -> Tuple[float, np.ndarray]:
+    def run_trial(self) -> float:
         """
         Run the ant colony optimisation algorithm for a number of fitness
         evaluations.
 
         Returns:
-            The best fitness and the best ant path found after finishing all
-            evaluations.
+            The best fitness found after finishing all evaluations.
         """
         best_fitness = float("inf")
-        best_ant_path = np.array([self.num_locations + 1] * self.num_locations)
 
         for i in range(self.num_evaluations_per_trial):
             ant_paths = np.empty((self.num_ant_paths, self.num_locations), dtype=int)
@@ -172,47 +170,41 @@ class AntColonyQAPSimulation:
             for j in range(self.num_ant_paths):
                 ant_paths[j] = self.generate_ant_path()
                 ant_fitnesses[j] = self.calculate_ant_path_fitness(ant_paths[j])
-                if ant_fitnesses[j] < best_fitness:
-                    best_fitness = ant_fitnesses[j]
-                    best_ant_path = ant_paths[j]
+                best_fitness = min(best_fitness, ant_fitnesses[j])
 
             self.update_pheromone_matrix(ant_paths, ant_fitnesses)
             self.evaporate_pheromone()
             print(f"Iteration {i} - current best fitness: {best_fitness}")
 
-        return best_fitness, best_ant_path
+        return best_fitness
 
-    def run_experiment(self) -> Tuple[List[float], List[np.ndarray]]:
+    def run_experiment(self) -> List[float]:
         """
         Run the ant colony optimisation algorithm for a number of trials.
 
         Returns:
-            A tuple containing the best fitnesses and the best ant paths found
-            after finishing all trials.
+            A list of the best fitnesses found after finishing all trials.
         """
         print(
             "Running experiment with "
             f"m = {self.num_ant_paths}, e = {self.evaporation_rate}..."
         )
         best_fitnesses = []
-        best_ant_paths = []
 
         for _ in range(self.num_trials):
             # Reset the pheromone matrix to ensure each trial is independent.
             self.pheromone_matrix = np.random.uniform(
                 0, 1, (self.num_locations, self.num_locations)
             )
-            best_fitness, best_ant_path = self.run_trial()
+            best_fitness = self.run_trial()
             best_fitnesses.append(best_fitness)
-            best_ant_paths.append(best_ant_path)
 
         print(
             f"Experiment {index + 1} (m = {self.num_ant_paths}, "
             f"e = {self.evaporation_rate}):"
         )
         print(f"Best Fitnesses: {best_fitnesses}")
-        print(f"Best Ant Paths: {best_ant_paths}")
-        return best_fitnesses, best_ant_paths
+        return best_fitnesses
 
 
 def load_data_file(file_name: str) -> Tuple[int, np.ndarray, np.ndarray]:
@@ -251,7 +243,6 @@ if __name__ == "__main__":
 
     # Run the experiments.
     best_fitness_results = []
-    best_ant_path_results = []
     for index, (m, e) in enumerate(configs):
         aco_sim = AntColonyQAPSimulation(
             num_trials=NUM_TRIALS,
@@ -262,9 +253,8 @@ if __name__ == "__main__":
             num_ant_paths=m,
             evaporation_rate=e,
         )
-        best_fitnesses_res, best_ant_paths_res = aco_sim.run_experiment()
+        best_fitnesses_res = aco_sim.run_experiment()
         best_fitness_results.append(best_fitnesses_res)
-        best_ant_path_results.append(best_ant_paths_res)
 
     end = time.perf_counter()
     print(f"\nTime taken: {end - start} seconds\n")
@@ -276,6 +266,5 @@ if __name__ == "__main__":
     for index, (m, e) in enumerate(configs):
         print(
             f"\nExperiment {index + 1} (m = {m}, e = {e}):\n"
-            f"    Best Fitness Results: {best_fitness_results[index]}\n"
-            f"    Best Ant Path Results: {best_ant_path_results[index]}"
+            f"    Best Fitness Results: {best_fitness_results[index]}"
         )
