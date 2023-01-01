@@ -168,7 +168,8 @@ class AntColonyQAPSimulation:
         Run the ant colony optimisation algorithm for a number of trials.
 
         Returns:
-            A list of the best fitnesses found after finishing all trials.
+            A tuple containing the best fitnesses and the best ant paths found
+            after finishing all trials.
         """
         print(
             "Running experiment with "
