@@ -89,13 +89,13 @@ class AntColonyQAPSimulation:
 
         return next_facility_index
 
-    def generate_ant_path(self) -> Tuple[float, np.ndarray]:
+    def generate_ant_path(self) -> np.ndarray:
         """
         Generate a path for an ant to follow using probabilities based on
         pheromone levels.
 
         Returns:
-            The fitness and the path that the ant took.
+            The path that the ant took.
         """
         ant_path = np.array([self.num_locations + 1] * self.num_locations)
         ant_path_set = set()
@@ -108,9 +108,8 @@ class AntColonyQAPSimulation:
             # Keep a separate set for the facilities that have been assigned
             # for O(1) rather than O(n) lookups.
             ant_path_set.add(facility_index)
-        ant_fitness = self.calculate_ant_path_fitness(ant_path)
 
-        return ant_fitness, ant_path
+        return ant_path
 
     def calculate_ant_path_fitness(self, ant_path: np.ndarray) -> float:
         """
@@ -171,7 +170,8 @@ class AntColonyQAPSimulation:
             # Generate the path for each ant to search for the best path and
             # fitness.
             for j in range(self.num_ant_paths):
-                ant_fitnesses[j], ant_paths[j] = self.generate_ant_path()
+                ant_paths[j] = self.generate_ant_path()
+                ant_fitnesses[j] = self.calculate_ant_path_fitness(ant_paths[j])
                 if ant_fitnesses[j] < best_fitness:
                     best_fitness = ant_fitnesses[j]
                     best_ant_path = ant_paths[j]
