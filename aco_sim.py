@@ -51,14 +51,14 @@ class AntColonyQAPSimulation:
         Returns:
             The index of the next facility to assign to a location.
         """
-        total_pheromone_in_next_paths = 0
+        total_pheromone = 0.0
         for i in range(self.num_locations):
             if i in ant_path_set:
                 continue
-            total_pheromone_in_next_paths += self.pheromone_matrix[row][i]
+            total_pheromone += self.pheromone_matrix[row][i]
 
         # Assign probabilities for each location based on the pheromone levels.
-        probabilities = np.empty(self.num_locations, dtype="float64")
+        probabilities = np.empty(self.num_locations)
         for i in range(self.num_locations):
             # If the facility has already been assigned a location, ensure that
             # it can't be selected in the future.
@@ -68,9 +68,7 @@ class AntColonyQAPSimulation:
             # pheromone levels.
             else:
                 next_facility_pheromone = self.pheromone_matrix[row][i]
-                probabilities[i] = (
-                    next_facility_pheromone / total_pheromone_in_next_paths
-                )
+                probabilities[i] = next_facility_pheromone / total_pheromone
 
         # Choose the next facility based on the weighted probability.
         probabilities /= np.sum(probabilities)
