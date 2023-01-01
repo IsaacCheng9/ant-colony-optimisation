@@ -209,7 +209,7 @@ def load_data_file(file_name: str) -> Tuple[int, np.ndarray, np.ndarray]:
         A tuple of the number of locations, and two 2D numpy arrays
         containing the distance matrix and the flow matrix.
     """
-    first_line = np.loadtxt(file_name, ndmin=2, usecols=(0))
+    first_line = np.loadtxt(file_name, ndmin=2, usecols=0)
     num_locations = int(first_line[0, 0])
     matrix_data = np.loadtxt(file_name, skiprows=1, unpack=True, ndmin=2)
     distance_matrix = matrix_data[0:, 0:num_locations]
