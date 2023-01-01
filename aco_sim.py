@@ -7,9 +7,9 @@ from typing import List, Tuple
 import numpy as np
 
 
-class AntColonySimulation:
+class AntColonyQAPSimulation:
     """
-    Simulation of an ant colony.
+    Simulation of an ant colony for the quadratic assignment problem (QAP).
     """
 
     def __init__(
@@ -32,8 +32,24 @@ class AntColonySimulation:
         self.flow_matrix = flow_matrix
         self.num_ant_paths = num_ant_paths
         self.evaporation_rate = evaporation_rate
+        # Randomly distribute small amounts of pheromone between 0 and 1 on
+        # the construction graph.
+        self.pheromone_matrix = np.random.uniform(
+            0, 1, (self.num_locations, self.num_locations)
+        )
 
-    def choose_next_facility(self, ant_path: np.ndarray, row: int):
+    def choose_next_facility(self, ant_path: np.ndarray, row: int) -> int:
+        """
+        Choose the next facility to assign to a location based on the pheromone
+        levels.
+
+        Args:
+            ant_path: The path that the ant has already taken.
+            row: The row of the pheromone matrix to use.
+
+        Returns:
+            The index of the next facility to assign to a location.
+        """
         total_pheromone_in_next_paths = 0
         for i in range(self.num_locations):
             if i in ant_path:
@@ -63,6 +79,13 @@ class AntColonySimulation:
         return next_facility
 
     def generate_ant_path(self) -> Tuple[np.ndarray, float]:
+        """
+        Generate a path for an ant to follow using probabilities based on
+        pheromone levels.
+
+        Returns:
+            The path that the ant took and the fitness of the path.
+        """
         ant_path = np.array([self.num_locations + 1] * self.num_locations)
         for i in range(self.num_locations):
             ant_path[i] = self.choose_next_facility(ant_path, i)
@@ -90,7 +113,7 @@ class AntColonySimulation:
 
     def update_pheromone_matrix(self, ant_paths: np.ndarray, ant_fitnesses: np.ndarray):
         """
-        Update the pheromone values for the paths.
+        Update the pheromone matrix values for the paths.
 
         Args:
             ant_paths: The paths to update the pheromone values for.
@@ -121,14 +144,11 @@ class AntColonySimulation:
 
         for i in range(self.num_evaluations_per_trial):
             print(f"Iteration {i} - Current best fitness: {best_fitness}")
-            # Randomly distribute small amounts of pheromone between 0 and 1 on
-            # the construction graph.
-            self.pheromone_matrix = np.random.uniform(
-                0, 1, (self.num_locations, self.num_locations)
-            )
             ant_paths = np.empty((self.num_ant_paths, self.num_locations), dtype=int)
             ant_fitnesses = np.empty(self.num_ant_paths, dtype=float)
 
+            # Generate the path for each ant to search for the best path and
+            # fitness.
             for j in range(self.num_ant_paths):
                 ant_path, ant_fitness = self.generate_ant_path()
                 ant_paths[j] = ant_path
@@ -143,7 +163,7 @@ class AntColonySimulation:
 
         return best_fitness, best_ant_path
 
-    def run_experiment(self) -> tuple:
+    def run_experiment(self) -> Tuple[List[float], List[np.ndarray]]:
         """
         Run the ant colony optimisation algorithm for a number of trials.
 
@@ -158,16 +178,20 @@ class AntColonySimulation:
         best_ant_paths = []
 
         for _ in range(self.num_trials):
+            # Reset the pheromone matrix to ensure each trial is independent.
+            self.pheromone_matrix = np.random.uniform(
+                0, 1, (self.num_locations, self.num_locations)
+            )
             best_fitness, best_ant_path = self.run_trial()
             best_fitnesses.append(best_fitness)
             best_ant_paths.append(best_ant_path)
+
         print(
             f"Experiment {index + 1} (m = {self.num_ant_paths}, "
             f"e = {self.evaporation_rate}):"
         )
         print(f"Best Fitnesses: {best_fitnesses}")
         print(f"Best Ant Paths: {best_ant_paths}")
-
         return best_fitnesses, best_ant_paths
 
 
@@ -188,7 +212,7 @@ def load_data_file(file_name: str) -> Tuple[int, np.ndarray, np.ndarray]:
     matrix_data = np.loadtxt(file_name, skiprows=1, unpack=True, ndmin=2)
     distance_matrix = matrix_data[0:, 0:num_locations]
     flow_matrix = matrix_data[0:, num_locations:]
-    return (num_locations, distance_matrix, flow_matrix)
+    return num_locations, distance_matrix, flow_matrix
 
 
 if __name__ == "__main__":
@@ -208,7 +232,7 @@ if __name__ == "__main__":
     # Run the experiments.
     results = []
     for index, (m, e) in enumerate(configs):
-        aco_sim = AntColonySimulation(
+        aco_sim = AntColonyQAPSimulation(
             num_trials=NUM_TRIALS,
             num_evaluations_per_trial=NUM_EVALUATIONS_PER_TRIAL,
             num_locations=locations,
@@ -221,7 +245,7 @@ if __name__ == "__main__":
 
     end = time.perf_counter()
     print(f"\nTime taken: {end - start} seconds\n")
-    # Display the results.
+    # Display the results of the experiments.
     for index, (m, e) in enumerate(configs):
         print(
             f"Results of experiments with {NUM_TRIALS} trials and "
