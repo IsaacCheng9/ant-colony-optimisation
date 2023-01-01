@@ -222,7 +222,7 @@ if __name__ == "__main__":
     start = time.perf_counter()
     locations, distances, flows = load_data_file("data/Uni50a.dat")
     NUM_TRIALS = 5
-    NUM_EVALUATIONS_PER_TRIAL = 10000
+    NUM_EVALUATIONS_PER_TRIAL = 10_000
     # (num_ant_paths, evaporation_rate)
     configs = [
         (100, 0.90),
@@ -232,7 +232,8 @@ if __name__ == "__main__":
     ]
 
     # Run the experiments.
-    results = []
+    best_fitness_results = []
+    best_ant_path_results = []
     for index, (m, e) in enumerate(configs):
         aco_sim = AntColonyQAPSimulation(
             num_trials=NUM_TRIALS,
@@ -243,14 +244,20 @@ if __name__ == "__main__":
             num_ant_paths=m,
             evaporation_rate=e,
         )
-        results.append(aco_sim.run_experiment())
+        best_fitnesses_res, best_ant_paths_res = aco_sim.run_experiment()
+        best_fitness_results.append(best_fitnesses_res)
+        best_ant_path_results.append(best_ant_paths_res)
 
     end = time.perf_counter()
     print(f"\nTime taken: {end - start} seconds\n")
     # Display the results of the experiments.
+    print(
+        f"\n\nResults of experiments with {NUM_TRIALS} trials and "
+        f"{NUM_EVALUATIONS_PER_TRIAL} evaluations per trial:\n"
+    )
     for index, (m, e) in enumerate(configs):
         print(
-            f"Results of experiments with {NUM_TRIALS} trials and "
-            f"{NUM_EVALUATIONS_PER_TRIAL} evaluations per trial:\n"
-            f"   Experiment {index + 1} (m = {m}, e = {e}): {results[index]}\n"
+            f"\nExperiment {index + 1} (m = {m}, e = {e}):\n"
+            f"    Best Fitness Results: {best_fitness_results[index]}\n"
+            f"    Best Ant Path Results: {best_ant_path_results[index]}"
         )
