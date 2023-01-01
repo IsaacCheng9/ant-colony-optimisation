@@ -65,7 +65,7 @@ class AntColonyQAPSimulation:
             ]
 
         # Assign probabilities for each location based on the pheromone levels.
-        probabilities = np.empty(self.num_locations)
+        probabilities = np.empty(self.num_locations, dtype=float)
         for facility_index in range(self.num_locations):
             # If the facility has already been assigned a location, ensure that
             # it can't be selected in the future.
@@ -89,13 +89,13 @@ class AntColonyQAPSimulation:
 
         return next_facility_index
 
-    def generate_ant_path(self) -> Tuple[np.ndarray, float]:
+    def generate_ant_path(self) -> Tuple[float, np.ndarray]:
         """
         Generate a path for an ant to follow using probabilities based on
         pheromone levels.
 
         Returns:
-            The path that the ant took and the fitness of the path.
+            The fitness and the path that the ant took.
         """
         ant_path = np.array([self.num_locations + 1] * self.num_locations)
         ant_path_set = set()
@@ -110,7 +110,7 @@ class AntColonyQAPSimulation:
             ant_path_set.add(facility_index)
         ant_fitness = self.calculate_ant_path_fitness(ant_path)
 
-        return ant_path, ant_fitness
+        return ant_fitness, ant_path
 
     def calculate_ant_path_fitness(self, ant_path: np.ndarray) -> float:
         """
@@ -171,11 +171,10 @@ class AntColonyQAPSimulation:
             # Generate the path for each ant to search for the best path and
             # fitness.
             for j in range(self.num_ant_paths):
-                ant_path, ant_fitness = self.generate_ant_path()
-                ant_paths[j], ant_fitnesses[j] = ant_path, ant_fitness
-                if ant_fitness < best_fitness:
-                    best_fitness = ant_fitness
-                    best_ant_path = ant_path
+                ant_fitnesses[j], ant_paths[j] = self.generate_ant_path()
+                if ant_fitnesses[j] < best_fitness:
+                    best_fitness = ant_fitnesses[j]
+                    best_ant_path = ant_paths[j]
 
             self.update_pheromone_matrix(ant_paths, ant_fitnesses)
             self.evaporate_pheromone()
