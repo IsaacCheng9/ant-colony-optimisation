@@ -38,9 +38,7 @@ class AntColonyQAPSimulation:
             0, 1, (self.num_locations, self.num_locations)
         )
 
-    def choose_next_facility(
-        self, ant_path_set: set, row: int
-    ) -> int:
+    def choose_next_facility_for_location(self, ant_path_set: set, row: int) -> int:
         """
         Choose the next facility to assign to a location based on the pheromone
         levels.
@@ -94,16 +92,16 @@ class AntColonyQAPSimulation:
         ant_path_set = set()
 
         for i in range(self.num_locations):
-            facility_index = self.choose_next_facility(ant_path_set, i)
+            facility_index = self.choose_next_facility_for_location(ant_path_set, i)
             ant_path[i] = facility_index
             # Keep a separate set for the facilities that have been assigned
             # for O(1) rather than O(n) lookups.
             ant_path_set.add(facility_index)
-        ant_fitness = self.calculate_fitness(ant_path)
+        ant_fitness = self.calculate_ant_path_fitness(ant_path)
 
         return ant_path, ant_fitness
 
-    def calculate_fitness(self, ant_path: np.ndarray) -> float:
+    def calculate_ant_path_fitness(self, ant_path: np.ndarray) -> float:
         """
         Calculate the fitness of a path.
 
