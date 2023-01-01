@@ -15,7 +15,7 @@ class AntColonyQAPSimulation:
     def __init__(
         self,
         num_trials: int,
-        num_evaluations_per_trial: int,
+        num_evals_per_trial: int,
         num_locations: int,
         distance_matrix: np.ndarray,
         flow_matrix: np.ndarray,
@@ -23,7 +23,7 @@ class AntColonyQAPSimulation:
         evaporation_rate: float,
     ):
         self.num_trials = num_trials
-        self.num_evaluations_per_trial = num_evaluations_per_trial
+        self.num_evals_per_trial = num_evals_per_trial
         self.num_locations = num_locations
         # Each element of the distance matrix represents the distance between
         # two locations, and each element of the flow matrix represents the
@@ -151,21 +151,21 @@ class AntColonyQAPSimulation:
         """
         self.pheromone_matrix *= self.evaporation_rate
 
-    def run_trial(self) -> Tuple[float, int]:
+    def run_trial(self) -> Tuple[float, int, int]:
         """
         Run the ant colony optimisation algorithm for a number of fitness
         evaluations.
 
         Returns:
-            The best fitness found after finishing all evaluations and the
-            number of times a better fitness was found.
+            The best fitness found after finishing all evaluations, the
+            number of times a better fitness was found, and the last evaluation
+            when a better fitness was found.
         """
-        # Keep track of the best fitness found so far in the trial, and how
-        # many times a better fitness was found.
         best_fitness = float("inf")
         better_fitness_count = 0
+        last_eval_improved = 1
 
-        for i in range(self.num_evaluations_per_trial):
+        for i in range(self.num_evals_per_trial):
             # Keep track of the best fitness found in this evaluation.
             best_fitness_in_eval = float("inf")
             ant_paths = np.empty((self.num_ant_paths, self.num_locations), dtype=int)
@@ -186,21 +186,25 @@ class AntColonyQAPSimulation:
             if best_fitness_in_eval < best_fitness:
                 best_fitness = best_fitness_in_eval
                 better_fitness_count += 1
+                last_eval_improved = i + 1
             print(
-                f"Evaluation {i} - best fitness in evaluation: {best_fitness_in_eval}, "
+                f"Evaluation {i + 1} - "
+                f"best fitness in evaluation: {best_fitness_in_eval}, "
                 f"best fitness in trial: {best_fitness}, "
-                f"better fitness found count: {better_fitness_count}"
+                f"better fitness found count: {better_fitness_count}, "
+                f"last evaluation fitness improved: {last_eval_improved}"
             )
 
-        return best_fitness, better_fitness_count
+        return best_fitness, better_fitness_count, last_eval_improved
 
-    def run_experiment(self) -> Tuple[List[float], List[int]]:
+    def run_experiment(self) -> Tuple[List[float], List[int], List[int]]:
         """
         Run the ant colony optimisation algorithm for a number of trials.
 
         Returns:
-            A list of the best fitnesses found and a list of the number of
-            times a better fitness was found per trial in the experiment.
+            A list of the best fitnesses found, a list of the number of
+            times a better fitness was found per trial in the experiment, and a
+            list of the last evaluation when a better fitness was found.
         """
         print(
             "Running experiment with "
@@ -208,25 +212,27 @@ class AntColonyQAPSimulation:
         )
         best_fitness_results = []
         better_fitness_count_results = []
+        last_eval_improved_results = []
 
         for _ in range(self.num_trials):
             # Reset the pheromone matrix to ensure each trial is independent.
             self.pheromone_matrix = np.random.uniform(
                 0, 1, (self.num_locations, self.num_locations)
             )
-            best_fitness, better_fitness_count = self.run_trial()
+            (
+                best_fitness,
+                better_fitness_count,
+                last_evaluation_improved,
+            ) = self.run_trial()
             best_fitness_results.append(best_fitness)
             better_fitness_count_results.append(better_fitness_count)
+            last_eval_improved_results.append(last_evaluation_improved)
 
-        print(
-            f"\nExperiment {index + 1} (m = {self.num_ant_paths}, "
-            f"e = {self.evaporation_rate}):"
+        return (
+            best_fitness_results,
+            better_fitness_count_results,
+            last_eval_improved_results,
         )
-        print(
-            f"    Best Fitness Results: {best_fitness_results}\n"
-            f"    Better Fitness Found Count Results: {better_fitness_count_results}\n"
-        )
-        return best_fitness_results, better_fitness_count_results
 
 
 def load_data_file(file_name: str) -> Tuple[int, np.ndarray, np.ndarray]:
@@ -254,7 +260,7 @@ if __name__ == "__main__":
     start = time.perf_counter()
     locations, distances, flows = load_data_file("data/Uni50a.dat")
     NUM_TRIALS = 5
-    NUM_EVALUATIONS_PER_TRIAL = 10_000
+    NUM_EVALS_PER_TRIAL = 10_000
     # (num_ant_paths, evaporation_rate)
     experiments = [
         (100, 0.90),
@@ -266,10 +272,11 @@ if __name__ == "__main__":
     # Run the experiments.
     best_fitness_per_exp = []
     better_fitness_count_per_exp = []
+    last_eval_improved_per_exp = []
     for index, (m, e) in enumerate(experiments):
         aco_sim = AntColonyQAPSimulation(
             num_trials=NUM_TRIALS,
-            num_evaluations_per_trial=NUM_EVALUATIONS_PER_TRIAL,
+            num_evals_per_trial=NUM_EVALS_PER_TRIAL,
             num_locations=locations,
             distance_matrix=distances,
             flow_matrix=flows,
@@ -279,21 +286,31 @@ if __name__ == "__main__":
         (
             best_fitness_exp_results,
             better_fitness_count_exp_results,
+            last_eval_improved_exp_results,
         ) = aco_sim.run_experiment()
         best_fitness_per_exp.append(best_fitness_exp_results)
         better_fitness_count_per_exp.append(better_fitness_count_exp_results)
+        last_eval_improved_per_exp.append(last_eval_improved_exp_results)
+        print(f"\nExperiment {index + 1} (m = {m}, e = {e}):")
+        print(
+            f"    Best Fitness Results: {best_fitness_exp_results}\n"
+            "    Better Fitness Found Count Results: "
+            f"{better_fitness_count_exp_results}\n"
+            f"    Last Evaluation Improved Results: {last_eval_improved_exp_results}\n"
+        )
 
     end = time.perf_counter()
     print(f"Time taken: {end - start} seconds\n")
     # Display the results of the experiments.
     print(
         f"Results of experiments with {NUM_TRIALS} trials and "
-        f"{NUM_EVALUATIONS_PER_TRIAL} evaluations per trial:"
+        f"{NUM_EVALS_PER_TRIAL} evaluations per trial:"
     )
     for index, (m, e) in enumerate(experiments):
         print(
             f"Experiment {index + 1} (m = {m}, e = {e}):\n"
             f"    Best Fitness Results: {best_fitness_per_exp[index]}\n"
             "    Better Fitness Found Count Results: "
-            f"{better_fitness_count_per_exp[index]}"
+            f"{better_fitness_count_per_exp[index]}\n"
+            f"    Last Evaluation Improved Results: {last_eval_improved_per_exp[index]}"
         )
