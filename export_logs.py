@@ -47,9 +47,11 @@ for trial_num in range(NUM_TRIALS):
             last_eval_improved,
         ]
     results.append(df)
+    print(f"DataFrame for trial #{trial_num + 1} created.")
 
 # Export the DataFrames to an Excel file, with a new sheet for each trial.
 excel_file_name = file_name.split(".")[0] + ".xlsx"
 with pd.ExcelWriter(excel_file_name) as writer:
     for trial_num, df in enumerate(results):
         df.to_excel(excel_writer=writer, sheet_name=f"Trial #{trial_num + 1}")
+        print(f"Trial #{trial_num + 1} exported to Excel.")
