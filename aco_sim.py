@@ -143,7 +143,7 @@ class AntColonyQAPSimulation:
         Returns:
             The path that the ant took.
         """
-        ant_path = np.array([self.num_locations + 1] * self.num_locations)
+        ant_path = np.zeros(self.num_locations, dtype=int)
         # Keep a separate set for the facilities that have been assigned for
         # O(1) rather than O(n) lookups.
         ant_path_set = set()
@@ -155,7 +155,7 @@ class AntColonyQAPSimulation:
             ant_path_set.add(facility_index)
         return ant_path
 
-    def calculate_ant_path_fitness(self, ant_path: np.ndarray) -> float:
+    def calculate_ant_path_fitness(self, ant_path: np.ndarray) -> np.ndarray:
         """
         Calculate the fitness of a path.
 
