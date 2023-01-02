@@ -99,7 +99,6 @@ class AntColonyQAPSimulation:
                 probabilities[facility_index] = (
                     facility_pheromone / total_remaining_pheromone
                 )
-
         return probabilities
 
     def randomly_choose_next_facility_for_location(
@@ -146,17 +145,15 @@ class AntColonyQAPSimulation:
             The path that the ant took.
         """
         ant_path = np.array([self.num_locations + 1] * self.num_locations)
+        # Keep a separate set for the facilities that have been assigned for
+        # O(1) rather than O(n) lookups.
         ant_path_set = set()
-
-        for i in range(self.num_locations):
+        for location_index in range(self.num_locations):
             facility_index = self.randomly_choose_next_facility_for_location(
-                i, ant_path_set
+                location_index, ant_path_set
             )
-            ant_path[i] = facility_index
-            # Keep a separate set for the facilities that have been assigned
-            # for O(1) rather than O(n) lookups.
+            ant_path[location_index] = facility_index
             ant_path_set.add(facility_index)
-
         return ant_path
 
     def calculate_ant_path_fitness(self, ant_path: np.ndarray) -> float:
@@ -170,11 +167,11 @@ class AntColonyQAPSimulation:
             The fitness of the path.
         """
         fitness = 0.0
-        for i in range(self.num_locations):
-            for j in range(self.num_locations):
+        for row in range(self.num_locations):
+            for col in range(self.num_locations):
                 fitness += (
-                    self.distance_matrix[ant_path[i]][ant_path[j]]
-                    * self.flow_matrix[i][j]
+                    self.distance_matrix[ant_path[row]][ant_path[col]]
+                    * self.flow_matrix[row][col]
                 )
         return fitness
 
@@ -213,7 +210,7 @@ class AntColonyQAPSimulation:
         better_fitness_count = 0
         last_eval_improved = 1
 
-        for eval in range(self.num_evals_per_trial):
+        for eval_num in range(self.num_evals_per_trial):
             # Keep track of the best fitness found in this evaluation.
             best_fitness_in_eval = float("inf")
             ant_paths = np.empty((self.num_ant_paths, self.num_locations), dtype=int)
@@ -234,9 +231,9 @@ class AntColonyQAPSimulation:
             if best_fitness_in_eval < best_fitness:
                 best_fitness = best_fitness_in_eval
                 better_fitness_count += 1
-                last_eval_improved = eval + 1
+                last_eval_improved = eval_num + 1
             print(
-                f"Evaluation {eval + 1} - "
+                f"Evaluation {eval_num + 1} - "
                 f"best fitness in evaluation: {best_fitness_in_eval}, "
                 f"best fitness in trial: {best_fitness}, "
                 f"better fitness found count: {better_fitness_count}, "
@@ -250,9 +247,9 @@ class AntColonyQAPSimulation:
         Run the ant colony optimisation algorithm for a number of trials.
 
         Returns:
-            A list of the best fitnesses found, a list of the number of
-            times a better fitness was found per trial in the experiment, and a
-            list of the last evaluation when a better fitness was found.
+            A list of the best fitnesses found, a list of the number of times
+            a better fitness was found per trial in the experiment, and a list
+            of the last evaluation when a better fitness was found.
         """
         print(
             "Running experiment with "
