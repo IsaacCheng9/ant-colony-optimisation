@@ -119,17 +119,20 @@ class AntColonyQAPSimulation:
         """
         # Only count the total remaining pheromone for facilities that haven't
         # been assigned.
-        pheromone_mask = np.ones(self.num_locations, dtype=bool)
-        pheromone_mask[list(ant_path_set)] = False
-        pheromone_levels = self.pheromone_matrix[location_index]
-        total_remaining_pheromone = np.sum(pheromone_levels, where=pheromone_mask)
+        total_remaining_pheromone = (
+            self.calculate_total_pheromone_for_unassigned_facilities(
+                location_index, ant_path_set
+            )
+        )
         # The probabilities of going to each facility is based on the pheromone
         # levels.
-        probabilities = pheromone_levels[pheromone_mask] / total_remaining_pheromone
+        probabilities = self.calculate_probabilities_of_facilities(
+            location_index, ant_path_set, total_remaining_pheromone
+        )
         # Choose the next facility based on the weighted probability.
-        next_facility_index = np.ravel(np.argwhere(pheromone_mask))[
-            np.random.choice(len(probabilities))
-        ]
+        next_facility_index = np.random.choice(
+            list(range(self.num_locations)), p=probabilities
+        )
         return next_facility_index
 
     def generate_ant_path(self) -> np.ndarray:
@@ -290,6 +293,8 @@ def load_data_file(file_name: str) -> Tuple[int, np.ndarray, np.ndarray]:
     return num_locations, distance_matrix, flow_matrix
 
 
+# !IMPORTANT: Redirect stdout to a log file for optimal performance:
+# !IMPORTANT: python -u aco_sim.py >> aco_sim.log
 if __name__ == "__main__":
     # Set up the experiment configurations.
     start = time.perf_counter()
