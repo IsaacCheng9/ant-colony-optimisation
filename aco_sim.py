@@ -119,21 +119,20 @@ class AntColonyQAPSimulation:
         """
         # Only count the total remaining pheromone for facilities that haven't
         # been assigned.
-        pheromone_mask = np.ones(self.num_locations, dtype=bool)
-        pheromone_mask[list(ant_path_set)] = False
+        pheromone_mask = [i not in ant_path_set for i in range(self.num_locations)]
         total_remaining_pheromone = np.sum(
-            self.pheromone_matrix[location_index][pheromone_mask]
+            self.pheromone_matrix[location_index], where=pheromone_mask
         )
         # The probabilities of going to each facility is based on the pheromone
         # levels.
-        probabilities = np.divide(
-            self.pheromone_matrix[location_index][pheromone_mask],
-            total_remaining_pheromone,
+        probabilities = (
+            self.pheromone_matrix[location_index][pheromone_mask]
+            / total_remaining_pheromone
         )
         # Choose the next facility based on the weighted probability.
-        next_facility_index = np.random.choice(
-            np.flatnonzero(pheromone_mask), p=probabilities
-        )
+        next_facility_index = [i for i, x in enumerate(pheromone_mask) if x][
+            np.random.choice(len(probabilities))
+        ]
         return next_facility_index
 
     def generate_ant_path(self) -> np.ndarray:
