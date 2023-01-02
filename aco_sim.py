@@ -117,21 +117,41 @@ class AntColonyQAPSimulation:
         Returns:
             The index of the next facility to assign to a location.
         """
+        # # Only count the total remaining pheromone for facilities that haven't
+        # # been assigned.
+        # total_remaining_pheromone = (
+        #     self.calculate_total_pheromone_for_unassigned_facilities(
+        #         location_index, ant_path_set
+        #     )
+        # )
+        # # The probabilities of going to each facility is based on the pheromone
+        # # levels.
+        # probabilities = self.calculate_probabilities_of_facilities(
+        #     location_index, ant_path_set, total_remaining_pheromone
+        # )
+        # # Choose the next facility based on the weighted probability.
+        # next_facility_index = np.random.choice(
+        #     list(range(self.num_locations)), p=probabilities
+        # )
+        # return next_facility_index
+
+        # TODO: Check whether this is equivalent to the above code - seems so.
         # Only count the total remaining pheromone for facilities that haven't
         # been assigned.
-        total_remaining_pheromone = (
-            self.calculate_total_pheromone_for_unassigned_facilities(
-                location_index, ant_path_set
-            )
+        pheromone_mask = np.ones(self.num_locations, dtype=bool)
+        pheromone_mask[list(ant_path_set)] = False
+        total_remaining_pheromone = np.sum(
+            self.pheromone_matrix[location_index][pheromone_mask]
         )
         # The probabilities of going to each facility is based on the pheromone
         # levels.
-        probabilities = self.calculate_probabilities_of_facilities(
-            location_index, ant_path_set, total_remaining_pheromone
+        probabilities = np.divide(
+            self.pheromone_matrix[location_index][pheromone_mask],
+            total_remaining_pheromone,
         )
         # Choose the next facility based on the weighted probability.
         next_facility_index = np.random.choice(
-            list(range(self.num_locations)), p=probabilities
+            np.flatnonzero(pheromone_mask), p=probabilities
         )
         return next_facility_index
 
