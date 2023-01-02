@@ -165,8 +165,7 @@ class AntColonyQAPSimulation:
         Returns:
             The fitness of the path.
         """
-        fitness = np.sum(self.distance_matrix[ant_path][:, ant_path] * self.flow_matrix)
-        return fitness
+        return np.sum(self.distance_matrix[ant_path][:, ant_path] * self.flow_matrix)
 
     def update_pheromone_matrix(
         self, ant_paths: np.ndarray, ant_fitnesses: np.ndarray
