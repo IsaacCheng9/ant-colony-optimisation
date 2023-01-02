@@ -38,12 +38,12 @@ class AntColonyQAPSimulation:
             0, 1, (self.num_locations, self.num_locations)
         )
 
-    def randomly_choose_next_facility_for_location(
+    def calculate_total_pheromone_for_unassigned_facilities(
         self, location_index: int, ant_path_set: set
-    ) -> int:
+    ) -> float:
         """
-        Randomly choose the next facility to assign to a location using weighted
-        probabilities based on the pheromone levels.
+        Calculate the total pheromone levels for facilities that haven't been
+        assigned to a location yet according to the ant path set.
 
         Args:
             location_index: The row of the pheromone matrix that represents
@@ -52,10 +52,9 @@ class AntColonyQAPSimulation:
                           to a location, used for fast look-ups.
 
         Returns:
-            The index of the next facility to assign to a location.
+            The total pheromone level for facilities that haven't been assigned
+            to a location.
         """
-        # Calculate the total pheromone levels for facilities that haven't been
-        # assigned to a location yet.
         total_remaining_pheromone = 0.0
         for facility_index in range(self.num_locations):
             if facility_index in ant_path_set:
@@ -63,8 +62,28 @@ class AntColonyQAPSimulation:
             total_remaining_pheromone += self.pheromone_matrix[location_index][
                 facility_index
             ]
+        return total_remaining_pheromone
 
-        # Assign probabilities for each location based on the pheromone levels.
+    def calculate_probabilities_of_facilities(
+        self, location_index: int, ant_path_set: set, total_remaining_pheromone: float
+    ) -> np.ndarray:
+        """
+        Calculate probabilities for each facility based on the pheromone
+        levels.
+
+        Args:
+            location_index: The row of the pheromone matrix that represents
+                            the location we're choosing for.
+            ant_path_set: A set of facilities that have already been assigned
+                          to a location, used for fast look-ups.
+            total_remaining_pheromone: The total pheromone level for facilities
+                                       that haven't been assigned to a
+                                       location.
+
+        Returns:
+            The probability of going to each facility from the current
+            location.
+        """
         probabilities = np.empty(self.num_locations, dtype=float)
         for facility_index in range(self.num_locations):
             # If the facility has already been assigned a location, ensure that
@@ -81,8 +100,37 @@ class AntColonyQAPSimulation:
                     facility_pheromone / total_remaining_pheromone
                 )
 
+        return probabilities
+
+    def randomly_choose_next_facility_for_location(
+        self, location_index: int, ant_path_set: set
+    ) -> int:
+        """
+        Randomly choose the next facility to assign to a location using
+        weighted probabilities based on the pheromone levels.
+
+        Args:
+            location_index: The row of the pheromone matrix that represents
+                            the location we're choosing for.
+            ant_path_set: A set of facilities that have already been assigned
+                          to a location, used for fast look-ups.
+
+        Returns:
+            The index of the next facility to assign to a location.
+        """
+        # Only count the total remaining pheromone for facilities that haven't
+        # been assigned.
+        total_remaining_pheromone = (
+            self.calculate_total_pheromone_for_unassigned_facilities(
+                location_index, ant_path_set
+            )
+        )
+        # The probabilities of going to each facility is based on the pheromone
+        # levels.
+        probabilities = self.calculate_probabilities_of_facilities(
+            location_index, ant_path_set, total_remaining_pheromone
+        )
         # Choose the next facility based on the weighted probability.
-        probabilities /= np.sum(probabilities)
         next_facility_index = np.random.choice(
             list(range(self.num_locations)), p=probabilities
         )
@@ -165,7 +213,7 @@ class AntColonyQAPSimulation:
         better_fitness_count = 0
         last_eval_improved = 1
 
-        for i in range(self.num_evals_per_trial):
+        for eval in range(self.num_evals_per_trial):
             # Keep track of the best fitness found in this evaluation.
             best_fitness_in_eval = float("inf")
             ant_paths = np.empty((self.num_ant_paths, self.num_locations), dtype=int)
@@ -173,10 +221,10 @@ class AntColonyQAPSimulation:
 
             # Generate the path for each ant to search for the best path and
             # fitness.
-            for j in range(self.num_ant_paths):
-                ant_paths[j] = self.generate_ant_path()
-                ant_fitnesses[j] = self.calculate_ant_path_fitness(ant_paths[j])
-                best_fitness_in_eval = min(best_fitness_in_eval, ant_fitnesses[j])
+            for ant in range(self.num_ant_paths):
+                ant_paths[ant] = self.generate_ant_path()
+                ant_fitnesses[ant] = self.calculate_ant_path_fitness(ant_paths[ant])
+                best_fitness_in_eval = min(best_fitness_in_eval, ant_fitnesses[ant])
 
             self.update_pheromone_matrix(ant_paths, ant_fitnesses)
             self.evaporate_pheromone()
@@ -186,9 +234,9 @@ class AntColonyQAPSimulation:
             if best_fitness_in_eval < best_fitness:
                 best_fitness = best_fitness_in_eval
                 better_fitness_count += 1
-                last_eval_improved = i + 1
+                last_eval_improved = eval + 1
             print(
-                f"Evaluation {i + 1} - "
+                f"Evaluation {eval + 1} - "
                 f"best fitness in evaluation: {best_fitness_in_eval}, "
                 f"best fitness in trial: {best_fitness}, "
                 f"better fitness found count: {better_fitness_count}, "
@@ -262,7 +310,7 @@ if __name__ == "__main__":
     NUM_TRIALS = 5
     NUM_EVALS_PER_TRIAL = 10_000
     # (num_ant_paths, evaporation_rate)
-    experiments = [
+    experiment_configs = [
         (100, 0.90),
         (100, 0.50),
         (10, 0.90),
@@ -273,7 +321,7 @@ if __name__ == "__main__":
     best_fitness_per_exp = []
     better_fitness_count_per_exp = []
     last_eval_improved_per_exp = []
-    for index, (m, e) in enumerate(experiments):
+    for exp_num, (m, e) in enumerate(experiment_configs):
         aco_sim = AntColonyQAPSimulation(
             num_trials=NUM_TRIALS,
             num_evals_per_trial=NUM_EVALS_PER_TRIAL,
@@ -291,7 +339,7 @@ if __name__ == "__main__":
         best_fitness_per_exp.append(best_fitness_exp_results)
         better_fitness_count_per_exp.append(better_fitness_count_exp_results)
         last_eval_improved_per_exp.append(last_eval_improved_exp_results)
-        print(f"\nExperiment {index + 1} (m = {m}, e = {e}):")
+        print(f"\nExperiment {exp_num + 1} (m = {m}, e = {e}):")
         print(
             f"    Best Fitness Results: {best_fitness_exp_results}\n"
             "    Better Fitness Found Count Results: "
@@ -299,18 +347,19 @@ if __name__ == "__main__":
             f"    Last Evaluation Improved Results: {last_eval_improved_exp_results}\n"
         )
 
+    # Display the results of the experiments.
     end = time.perf_counter()
     print(f"Time taken: {end - start} seconds\n")
-    # Display the results of the experiments.
     print(
         f"Results of experiments with {NUM_TRIALS} trials and "
         f"{NUM_EVALS_PER_TRIAL} evaluations per trial:"
     )
-    for index, (m, e) in enumerate(experiments):
+    for exp_num, (m, e) in enumerate(experiment_configs):
         print(
-            f"Experiment {index + 1} (m = {m}, e = {e}):\n"
-            f"    Best Fitness Results: {best_fitness_per_exp[index]}\n"
+            f"Experiment {exp_num + 1} (m = {m}, e = {e}):\n"
+            f"    Best Fitness Results: {best_fitness_per_exp[exp_num]}\n"
             "    Better Fitness Found Count Results: "
-            f"{better_fitness_count_per_exp[index]}\n"
-            f"    Last Evaluation Improved Results: {last_eval_improved_per_exp[index]}"
+            f"{better_fitness_count_per_exp[exp_num]}\n"
+            "    Last Evaluation Improved Results: "
+            f"{last_eval_improved_per_exp[exp_num]}"
         )
