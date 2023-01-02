@@ -297,11 +297,10 @@ def load_data_file(file_name: str) -> Tuple[int, np.ndarray, np.ndarray]:
 # !IMPORTANT: python -u aco_sim.py >> aco_sim.log
 if __name__ == "__main__":
     # Set up the experiment configurations.
-    start = time.perf_counter()
     locations, distances, flows = load_data_file("data/Uni50a.dat")
     NUM_TRIALS = 5
     NUM_EVALS_PER_TRIAL = 10_000
-    # (num_ant_paths, evaporation_rate)
+    # (num_ant_paths (m), evaporation_rate (e))
     experiment_configs = [
         (100, 0.90),
         (100, 0.50),
@@ -314,6 +313,8 @@ if __name__ == "__main__":
     better_fitness_count_per_exp = []
     last_eval_improved_per_exp = []
     for exp_num, (m, e) in enumerate(experiment_configs):
+        # Start the timer to track the runtime of the experiment.
+        start = time.perf_counter()
         aco_sim = AntColonyQAPSimulation(
             num_trials=NUM_TRIALS,
             num_evals_per_trial=NUM_EVALS_PER_TRIAL,
@@ -328,6 +329,9 @@ if __name__ == "__main__":
             better_fitness_count_exp_results,
             last_eval_improved_exp_results,
         ) = aco_sim.run_experiment()
+        # Calculate the runtime of the experiment
+        end = time.perf_counter()
+        print(f"Experiment {exp_num + 1} completed in {end - start} seconds")
         best_fitness_per_exp.append(best_fitness_exp_results)
         better_fitness_count_per_exp.append(better_fitness_count_exp_results)
         last_eval_improved_per_exp.append(last_eval_improved_exp_results)
@@ -339,9 +343,7 @@ if __name__ == "__main__":
             f"    Last Evaluation Improved Results: {last_eval_improved_exp_results}\n"
         )
 
-    # Display the results of the experiments.
-    end = time.perf_counter()
-    print(f"Time taken: {end - start} seconds\n")
+    # Display a summary of the results of the experiments.
     print(
         f"Results of experiments with {NUM_TRIALS} trials and "
         f"{NUM_EVALS_PER_TRIAL} evaluations per trial:"
