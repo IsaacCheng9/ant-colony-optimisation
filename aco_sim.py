@@ -133,7 +133,6 @@ class AntColonyQAPSimulation:
         next_facility_index = np.random.choice(
             list(range(self.num_locations)), p=probabilities
         )
-
         return next_facility_index
 
     def generate_ant_path(self) -> np.ndarray:
@@ -166,13 +165,7 @@ class AntColonyQAPSimulation:
         Returns:
             The fitness of the path.
         """
-        fitness = 0.0
-        for row in range(self.num_locations):
-            for col in range(self.num_locations):
-                fitness += (
-                    self.distance_matrix[ant_path[row]][ant_path[col]]
-                    * self.flow_matrix[row][col]
-                )
+        fitness = np.sum(self.distance_matrix[ant_path][:, ant_path] * self.flow_matrix)
         return fitness
 
     def update_pheromone_matrix(
