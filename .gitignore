@@ -132,3 +132,13 @@ dmypy.json
 *.txt
 *.xlsx
 *.png
+
+# LaTeX files
+*.aux
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.xdv
+*.bbl
+*.blg
+*.out
