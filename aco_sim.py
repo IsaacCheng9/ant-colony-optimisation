@@ -179,8 +179,9 @@ class AntColonyQAPSimulation:
                        pheromone values.
         """
         for i in range(self.num_ant_paths):
-            for j in range(self.num_locations):
-                self.pheromone_matrix[j][ant_paths[i][j]] += 1 / ant_fitnesses[i]
+            self.pheromone_matrix[np.arange(self.num_locations), ant_paths[i]] += (
+                1 / ant_fitnesses[i]
+            )
 
     def evaporate_pheromone(self) -> None:
         """
