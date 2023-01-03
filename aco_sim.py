@@ -296,8 +296,9 @@ def load_data_file(file_name: str) -> Tuple[int, np.ndarray, np.ndarray]:
 # !IMPORTANT: Redirect stdout to a log file for optimal performance:
 # !IMPORTANT: python -u aco_sim.py >> aco_sim.log
 if __name__ == "__main__":
-    # Set up the experiment configurations.
+    # Set up the design problem provided by the file.
     locations, distances, flows = load_data_file("data/Uni50a.dat")
+    # !IMPORTANT: Change these experiment parameters and the configs to run.
     NUM_TRIALS = 5
     NUM_EVALS_PER_TRIAL = 10_000
     # (num_ant_paths (m), evaporation_rate (e))
