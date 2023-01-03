@@ -303,10 +303,15 @@ if __name__ == "__main__":
     NUM_EVALS_PER_TRIAL = 10_000
     # (num_ant_paths (m), evaporation_rate (e))
     experiment_configs = [
+        # Experiments 1-4 contain the ones asked for in the assignment.
         (100, 0.90),
         (100, 0.50),
         (10, 0.90),
         (10, 0.50),
+        # Experiments 5-7 contain extra experiments to test the effect of e.
+        (10, 0.8),
+        (10, 0.7),
+        (10, 0.6),
     ]
 
     # Run the experiments.
