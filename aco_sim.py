@@ -7,9 +7,11 @@ from typing import List, Tuple
 import numpy as np
 
 
-class AntColonyQAPSimulation:
+class AntColonyOptimisationForQAPSimulation:
     """
-    Simulation of an ant colony for the quadratic assignment problem (QAP).
+    Simulation of an ant colony optimisation for the quadratic assignment
+    problem (QAP). Each experiment consists of a number of trials, and each
+    trial consists of a number of evalutions according to the parameters.
     """
 
     def __init__(
@@ -321,7 +323,7 @@ if __name__ == "__main__":
     for exp_num, (m, e) in enumerate(experiment_configs):
         # Start the timer to track the runtime of the experiment.
         start = time.perf_counter()
-        aco_sim = AntColonyQAPSimulation(
+        aco_sim = AntColonyOptimisationForQAPSimulation(
             num_trials=NUM_TRIALS,
             num_evals_per_trial=NUM_EVALS_PER_TRIAL,
             num_locations=locations,
